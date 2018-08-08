@@ -1,0 +1,8 @@
+﻿  Main.cpp
+c:\users\joaov\source\repos\trabalho1\trabalho1\transformacoes.h(17): warning C4305: 'inicializando': truncamento de 'double' para 'float'
+c:\users\joaov\source\repos\trabalho1\trabalho1\main.cpp(20): warning C4244: 'inicializando': conversão de 'float' para 'int', possível perda de dados
+c:\users\joaov\source\repos\trabalho1\trabalho1\main.cpp(60): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
+c:\users\joaov\source\repos\trabalho1\trabalho1\main.cpp(63): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
+c:\users\joaov\source\repos\trabalho1\trabalho1\main.cpp(66): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
+c:\users\joaov\source\repos\trabalho1\trabalho1\main.cpp(69): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
+  Trabalho1.vcxproj -> C:\Users\joaov\source\repos\Trabalho1\Debug\Trabalho1.exe
