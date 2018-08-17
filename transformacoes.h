@@ -6,6 +6,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include <iostream>
 
 //Definições de Tipo
 typedef glm::mat3 mat3;
@@ -14,7 +15,7 @@ typedef glm::vec3 vec3;
 typedef glm::vec4 vec4;
 
 //Constantes
-const float pi = 3.14159265;
+const float pi = 3.14159265359;
 
 //Protótipo das Funções
 void esquerda(float degrees, vec3 &eye, vec3 &up);

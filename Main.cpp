@@ -164,8 +164,8 @@ void renderiza()
 
 	projection = glm::perspective(glm::radians(Zoom), (float)w / (float)h, 0.1f, 100.0f);
 
-	model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::translate(model, glm::vec3(0.2f, 0.0f, 0.0f));
+	//model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	//model = glm::translate(model, glm::vec3(0.2f, 0.0f, 0.0f));
 
 
 	//Passa a matriz para o vertex shader 
