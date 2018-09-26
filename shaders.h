@@ -12,3 +12,4 @@ GLuint compileShader(GLenum type, const char * filename);
 GLuint createProgram(GLuint vertexShader, GLuint fragmentShader);
 
 #endif 
+

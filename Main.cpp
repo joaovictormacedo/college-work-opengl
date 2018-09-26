@@ -1,4 +1,3 @@
-
 //Inclusão de Bibliotecas
 #include <iostream>
 #include <glad/glad.h>
@@ -17,20 +16,40 @@ using namespace std;
 //Constantes
 const vec3 eyeinit(0.0f, 0.0f, 7.0f);
 const vec3 upinit(0.0f, 1.0f, 0.0f);
+const vec3 targetInit(0.0f, 0.0f, 0.0f);
 const int amountinit = 1.5f;
 
 //Variáveis Globais
 int w, h; //Largura e altura inicial da janela
 int amount; //Quantidade de rotação para cada vez que pressionar a tecla
-float Zoom = 45.0f;
-GLint program; //Referência para o programa dos shaders
-GLuint VAO; //Referência ao Vertex Array Object, gerenciará os vértices
-GLuint VBO; //Referência para o Vertex Buffer Object, buffer para armazenar os vértices
-GLuint EBO; //Referência para o Element Buffer Object, buffer interno de vértices
-GLuint projectionLoc, modelLoc, viewLoc;
+float distancia = 30.0f;  //Distancia Inicial do Objeto
+GLint program, programLamp; //Referência para o programa dos shaders
+GLuint VAO, lampVAO ; //Referência ao Vertex Array Object, gerenciará os vértices
+GLuint VBO, lampVBO; //Referência para o Vertex Buffer Object, buffer para armazenar os vértices
+GLuint EBO, lampEBO; //Referência para o Element Buffer Object, buffer interno de vértices
+GLuint projectionLoc, modelLoc, viewLoc, lightColorLoc;
+GLuint lampProjectionLoc, lampModelLoc, lampViewLoc, lampLightColor;
+
 vec3 eye;
 vec3 up;
+vec3 target;
+
+//vertices, normais e indices para o teapot
+std::vector <glm::vec3> vertices;
+std::vector <glm::vec3> normais;
+std::vector <unsigned int> indices;
+
+//vertices normais e indices para a "lampada"
+std::vector <glm::vec3> vertices_lamp;
+std::vector <glm::vec3> normais_lamp;
+std::vector <unsigned int> indices_lamp;
+
+// lighting
+glm::vec3 lightPos(3.3f, 3.3f, 0.0f);
+GLfloat lightColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
 mat4 model, view, projection;
+mat4 lampModel, lampView, lampProjection;
 
 	
 
@@ -39,23 +58,28 @@ void callback_teclado(GLFWwindow* win, int key, int scancode, int action, int mo
 {
 	switch (key) {
 		case GLFW_KEY_A:
-			//Zoom+
-			if (Zoom >= 1.0f && Zoom <= 45.0f)
-				Zoom -= 1.0f;
-			if (Zoom <= 1.0f)
-				Zoom = 1.0f;
-			if (Zoom >= 45.0f)
-				Zoom = 45.0f;
+			//distancia+
+			if (distancia >= 1.0f && distancia <= 45.0f)
+				distancia -= 1.0f;
+			if (distancia <= 1.0f)
+				distancia = 1.0f;
+			if (distancia >= 45.0f)
+				distancia = 45.0f;
 			break;
 		case GLFW_KEY_D:
-			//Zoom-
-			if (Zoom >= 1.0f && Zoom <= 45.0f)
-				Zoom += 1.0f;
-			if (Zoom <= 1.0f)
-				Zoom = 1.0f;
-			if (Zoom >= 45.0f)
-				Zoom = 45.0f;
+			//distancia-
+			if (distancia >= 1.0f && distancia <= 45.0f)
+				distancia += 1.0f;
+			if (distancia <= 1.0f)
+				distancia = 1.0f;
+			if (distancia >= 45.0f)
+				distancia = 45.0f;
 			break;
+
+		case GLFW_KEY_6:
+			target = vec3(1.0f, 0.0f, 0.0f);
+			break;
+
 		case GLFW_KEY_LEFT:
 			esquerda(amount, eye, up);
 			break;
@@ -75,7 +99,7 @@ void callback_teclado(GLFWwindow* win, int key, int scancode, int action, int mo
 			eye = eyeinit;
 			up = upinit;
 			amount = amountinit;
-			Zoom = 45.0f;
+			distancia = 45.0f;
 			break;
 	}
 }
@@ -92,8 +116,11 @@ void callback_redimensionamento(GLFWwindow* win, int width, int height) {
 	// Abaixo defina a matrix de projecao
 	// e a passe para o programa shader usando glUniformMatrix4fv(). 
 	
-	projection = glm::perspective(glm::radians(45.0f), (float)w/(float)h, 0.1f, 100.0f);
+	//projection = glm::perspective(glm::radians(45.0f), (float)w/(float)h, 0.1f, 100.0f);
+	//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+	glUniformMatrix4fv(lampProjectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 }
 
 
@@ -110,20 +137,43 @@ void init() {
 	//Compila e linka os shaders
 	GLint vertShader	= compileShader(GL_VERTEX_SHADER, "./shader.ver");
 	GLint fragShader	= compileShader(GL_FRAGMENT_SHADER, "./shader.fra");
-	program				= createProgram(vertShader, fragShader);
 
-	//Carrega o Objeto
-	parse("./teapot.obj");
+	GLint vertShaderLamp = compileShader(GL_VERTEX_SHADER, "./shader_lamp.ver");
+	GLint fragShaderLamp = compileShader(GL_FRAGMENT_SHADER, "./shader_lamp.fra");
+
+	program				= createProgram(vertShader, fragShader);
+	programLamp 		 = createProgram(vertShader, fragShader);
+
+
+	// le o arquivo OBJ do teapot
+	parse2("./monkeyspider.obj", vertices, normais, indices);//./TreeCartoon.obj
+
+	//le arquivo OBJ da esfera
+	parse("./sphere.obj", vertices_lamp, normais_lamp, indices_lamp);
 
 	//Recupera a localização da transformação
 	projectionLoc = glGetUniformLocation(program, "projection");
 	viewLoc = glGetUniformLocation(program, "view");
 	modelLoc = glGetUniformLocation(program, "model");
+	lightColorLoc = glGetUniformLocation(program, "lightColor");
+
+	//Recupera a localização da transformação
+	lampProjectionLoc = glGetUniformLocation(programLamp, "projection");
+	lampViewLoc = glGetUniformLocation(programLamp, "view");
+	lampModelLoc = glGetUniformLocation(programLamp, "model");
+	lampLightColor = glGetUniformLocation(programLamp, "lightC");
+
+
 
 	//Cria um Vertex Array Object, um Vertex Buffer Object e um Element Buffer Object
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
+
+	//Cria um Vertex Array Object, um Vertex Buffer Object e um Element Buffer Object
+	glGenVertexArrays(1, &lampVAO);
+	glGenBuffers(1, &lampVBO);
+	glGenBuffers(1, &lampEBO);
 
 	//ativa o Vertex Array Object VAO
 	glBindVertexArray(VAO);
@@ -135,6 +185,26 @@ void init() {
 	//Povoa o EBO com os indices
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*indices.size(), &indices[0], GL_STATIC_DRAW);
+
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, 3 * sizeof(GLfloat), (void*)0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	///////////////////////// Lamp
+
+	//ativa o Vertex Array Object VAO
+	glBindVertexArray(lampVAO);
+
+	//Povoa o VBO com os vertices
+	glBindBuffer(GL_ARRAY_BUFFER, lampVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices_lamp.size(), &vertices_lamp[0], GL_STATIC_DRAW);
+
+	//Povoa o EBO com os indices
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lampEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*indices_lamp.size(), &indices_lamp[0], GL_STATIC_DRAW);
 
 
 	glEnableVertexAttribArray(0);
@@ -150,25 +220,28 @@ void renderiza()
 {
 
 	// preenche buffer (pinta os pixels) associado ao fundo com branco
-	GLfloat cor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	glClearBufferfv(GL_COLOR, 0, cor);
+	//GLfloat cor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	//glClearBufferfv(GL_COLOR, 0, cor);
+	
+	// preenche buffer (pinta os pixels) associado ao fundo com branco
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// usa os shaders criados anteriormente em init()
 	glUseProgram(program);
 	glBindVertexArray(VAO);
 
-	//monta a matriz modelo
-	model = minhaEscala(glm::mat4(1.0f), glm::vec3(2.5f, 2.5f, 2.5f));
+	//Matriz Modelo
+	model = minhaEscala(glm::mat4(1.0f), glm::vec3(0.12f, 0.12f, 0.12f));
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
 
+	//Matriz de Visualização
 	view = myLookAt(eye, up);
 
-	projection = glm::perspective(glm::radians(Zoom), (float)w / (float)h, 0.1f, 100.0f);
+	//Matriz de Projeçao
+	projection = glm::perspective(glm::radians(100.f), (float)w / (float)h, 0.1f, 100.0f);
 
-	//model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	//model = glm::translate(model, glm::vec3(0.2f, 0.0f, 0.0f));
-
-
-	//Passa a matriz para o vertex shader 
+	//Passa as matrizes para o vertex shader 
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
@@ -176,6 +249,35 @@ void renderiza()
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
+
+
+	/////////////////////////////////////////////lamp
+	// usa os shaders criados anteriormente em init()
+
+	glUseProgram(programLamp);
+	glBindVertexArray(lampVAO);
+
+	//Matriz Modelo
+	lampModel = minhaEscala(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+	lampModel = glm::translate(lampModel, lightPos);
+
+	//Matriz de Visualização
+	lampView = myLookAt(eye, up);
+
+	//Matriz de Projeçao
+	lampProjection = glm::perspective(glm::radians(distancia), (float)w / (float)h, 0.1f, 100.0f);
+
+	//Passa as matrizes para o vertex shader 
+	glUniformMatrix4fv(lampModelLoc, 1, GL_FALSE, glm::value_ptr(lampModel));
+	glUniformMatrix4fv(lampViewLoc, 1, GL_FALSE, glm::value_ptr(lampView));
+	glUniformMatrix4fv(lampProjectionLoc, 1, GL_FALSE, glm::value_ptr(lampProjection));
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glDrawElements(GL_TRIANGLES, indices_lamp.size(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+
+
+
 }
 
 
@@ -233,6 +335,11 @@ int main() {
 	glDeleteBuffers(1, &EBO);
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteProgram(program);
+
+	glDeleteBuffers(1, &lampVBO);
+	glDeleteBuffers(1, &lampEBO);
+	glDeleteVertexArrays(1, &lampVAO);
+	glDeleteProgram(programLamp);
 	glfwTerminate();
 
 	return 0;

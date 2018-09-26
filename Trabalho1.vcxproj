@@ -136,9 +136,20 @@
   <ItemGroup>
     <None Include="..\..\Exemplo6\Exemplo6\shader.fra" />
     <None Include="..\..\Exemplo6\Exemplo6\shader.ver" />
+    <None Include="shader_lamp.fra" />
+    <None Include="shader_lamp.ver" />
   </ItemGroup>
   <ItemGroup>
     <Object Include="..\..\Exemplo6\Exemplo6\teapot.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </Object>
+    <Object Include="elephant.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </Object>
+    <Object Include="monkeyspider.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </Object>
+    <Object Include="TreeSet3.obj">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </Object>
   </ItemGroup>

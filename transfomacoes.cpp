@@ -2,6 +2,13 @@
 
 using namespace  std;
 
+//Local Space -> Model Matriz
+//World Space -> View Matriz
+//View Space -> Projection Matrix
+//Clip Space -> ViewPort -> Screen 
+
+
+//Função Escala
 mat4 minhaEscala(mat4 mIndent, vec3 coordenadas) {
 	mat4 result;
 	result[0] = mIndent[0] * coordenadas[0];
@@ -12,7 +19,7 @@ mat4 minhaEscala(mat4 mIndent, vec3 coordenadas) {
 }
 
 // function to display 4x4 matrix
-void imrimeMatriz3x3(string titulo, glm::mat3 m4)
+void imrimeMatriz3x3(string titulo, mat3 m4)
 {
 	printf("%s\n", titulo.c_str());
 	for (int col = 0; col < 3; ++col) {
@@ -30,8 +37,7 @@ void imrimeMatriz3x3(string titulo, glm::mat3 m4)
 mat3 rotaciona(const float degree, const glm::vec3& axis) {
 
 	//Normalizando o vetor
-	glm::vec3 axisNormalizado = glm::normalize(axis);
-
+	vec3 axisNormalizado = normalize(axis);
 
 	//Recuperando os elementos do vetor e armazenando e variaveis separadas
 	float x = axisNormalizado.x;
@@ -41,16 +47,13 @@ mat3 rotaciona(const float degree, const glm::vec3& axis) {
 	//Convertendo o angulo de graus para radianos usando a formula  x° = pi/180
 	float anguloRadianos = degree * (pi / 180.0f);
 
-
 	//Definindo os senos e cossenos utilizados na matriz de rotação
 	float seno = sin(anguloRadianos);
 	float cosseno = cos(anguloRadianos);
 
-
 	//Definindo a matriz de translação
 	//glm::mat3 matrizTranslacao = glm::mat3(1,0, -x);
-
-
+	
 	/*Rotacionando torno do eixo z
 	glm::mat3 rotacaoZ = glm::mat3(cosseno*x - seno*y, 0, 0, 0, seno*x + cosseno * y, 0, 0, 0, z);
 	
@@ -66,97 +69,102 @@ mat3 rotaciona(const float degree, const glm::vec3& axis) {
 	//Calculando o produto da rotação dos 3 eixos obtemos 
 	glm::mat3 rotacaoFinal = rotacaoX * rotacaoY * rotacaoZ;*/
 
-	
-
 
 	//Calculando a matriz final de rotação a partir do vetor axis normalizado 
-	glm::mat3 rotacaoXYZ = glm::mat3(cosseno + pow(x, 2)*(1 - cosseno), y*x*(1 - cosseno) + z * seno, z*x*(1 - cosseno) - y * seno,
-									  x*y*(1-cosseno) - z*seno, cosseno + pow(y, 2)*(1-cosseno), z*y*(1-cosseno) + x*seno,
-									  x*z*(1-cosseno) + y*seno, y*z*(1-cosseno) - x*seno, cosseno + pow(z, 2)*(1-cosseno)
-									);
+	mat3 rotacaoXYZ =mat3(cosseno + pow(x, 2)*(1 - cosseno), y*x*(1 - cosseno) + z * seno, z*x*(1 - cosseno) - y * seno,
+						  x*y*(1-cosseno) - z*seno, cosseno + pow(y, 2)*(1-cosseno), z*y*(1-cosseno) + x*seno,
+						  x*z*(1-cosseno) + y*seno, y*z*(1-cosseno) - x*seno, cosseno + pow(z, 2)*(1-cosseno)
+				        	);
 
+	//imrimeMatriz3x3("MatrizXYZ", rotacaoXYZ);
 
-
-	imrimeMatriz3x3("MatrizXYZ", rotacaoXYZ);
-
-	
-	
 	return rotacaoXYZ;									
 }
 
 
-
-
-
-
 // rotaciona a camera pela esquerda da "bola de cristal"
-void esquerda(float degrees, glm::vec3& eye, glm::vec3& up) {
+void esquerda(float degrees, vec3& eye, vec3& up) {
 	eye = eye * rotaciona(degrees, up);
 }
 
+
 // rotaciona a camera por cima da "bola de cristal"
-void paraCima(float degrees, glm::vec3& eye, glm::vec3& up) {
+void paraCima(float degrees, vec3& eye, vec3& up) {
 
 	//Calcula o produto vetorial 
-	glm::vec3 axis = glm::cross(eye, up);
-
-
-	glm::mat3 rotacionaMatriz = rotaciona(degrees, axis);
+	vec3 axis = prodVetorial(up, eye);
+	mat3 rotacionaMatriz = rotaciona(degrees, axis);
 
 	eye = eye * rotacionaMatriz;
 	up = up * rotacionaMatriz;
 }
 
 
-// sua implementacao de glm::lookAt
-// sempre olhando para a origem
-/*glm::mat4 myLookAt(glm::vec3 eye, glm::vec3 up) {
-glm::vec3 w = glm::normalize(eye);
-up = glm::normalize(up);
-
-//glm::vec3 u = glm::normalize(glm::cross(up, w));
-glm::vec3 u = glm::cross(up, w);
-glm::vec3 v = glm::normalize(glm::cross(w, u));
-glm::mat4 transformM =
-glm::mat4(
-u.x, u.y, u.z, -glm::dot(u, eye),
-v.x, v.y, v.z, -glm::dot(v, eye),
-w.x, w.y, w.z, -glm::dot(w, eye),
-0.0f, 0.0f, 0.0f, 1.0f
-);
-
-return transformM;
-}*/
-
-// https://stackoverflow.com/questions/19740463/lookat-function-im-going-crazy
-// http://www.songho.ca/opengl/gl_transform.html
-
-
-glm::mat4 myLookAt(glm::vec3 eye, glm::vec3 up) {
+// Função que calcula o produto vetorial entre dois vetores
+vec3 prodVetorial(vec3 vet1, vec3 vet2 ) {
 	
+	vec3 produto = vec3(vet1.y * vet2.z - vet2.y * vet1.z,
+						vet1.z * vet2.x - vet2.z * vet1.x, 
+						vet1.x * vet2.y - vet2.x * vet1.y);
+	return produto;
+}
+
+// Função de Normalização 
+vec3 normaliza(vec3 vetor) {
+
+	//"a" ao quadrado, mais "b" ao quadrado é igual a "c" ao quadrado.
+
+	float magVetor = glm::sqrt(pow(vetor.x, 2) + pow(vetor.y, 2) + pow(vetor.z, 2));
+
+	vec3 normalizado = vec3(vetor.x / magVetor, vetor.y / magVetor, vetor.z / magVetor);
+
+	return normalizado;
+
+}
+
+//Função de Translação 
+mat4 translado(vec3 vetor) {
+	return mat4(1,0,0,0,
+				0,1,0,0,
+				0,0,1,0,
+				vetor.x, vetor.y, vetor.z, 1
+				);
+}
+
+// Função que realiza as transformações de câmera, cria uma matriz de visualização que olha para um determinado alvo. 
+mat4 myLookAt(vec3 eye, vec3 up) {
+	
+	//DOT - produto escalar
+	//Cross - produto vetorial
+	//Normalize - Normalização
+
+	/*	Posição do Olho: e, eye
+		Direção do Olhar: g = o - e, "o" centro de observação
+		Orientação da Camêra: t
+	*/
+
+	//Sistema de Coordenadas da camêra com origem em e - Aula3:8
+	vec3 D = normaliza(eye); //Vetor Direção
+	vec3 R = normaliza(prodVetorial(up, D));  //Vetor Right
+	vec3 U = normaliza(prodVetorial(D, R)); //Vetor UP
 
 
-	glm::vec3 w = glm::normalize(eye); //Direção que está olhando
-	glm::vec3 u = glm::normalize(up); //Para cima
-	glm::vec3 v = glm::normalize(glm::cross(w, u)); // vetor certo
+	//Rotaciona o sistema de cordenadas do mundo para para que ele se alinhe com o SC da câmera
+	mat4 matrizRotacao = mat4(R.x, U.x, D.x, 0,
+						      R.y, U.y, D.y, 0,
+							  R.z, U.z, D.z, 0,
+							   0, 0, 0, 1);
 
-	u = glm::cross(up, w);
+	//Realiza a translação da coordenada do olho para a origem 
+	mat4 matrizTranslacao = mat4(1, 0, 0, 0,
+							     0, 1, 0, 0,
+								 0, 0, 1, 0,
+								-eye.x, -eye.y, -eye.z, 1); 
+	
+	//Matriz que transforma os pontos do objeto e posiçiona de modo
+	//que observamos a origem do SC Mundo, como se estivessemos posicionados no SC camera
+	mat4 mCam = matrizRotacao * matrizTranslacao;
 
-	glm::mat4 rotation = glm::mat4(
-		u.x, u.y, u.z, 0,
-		v.x, v.y, v.z, 0,
-		w.x, w.y, w.z, 0,
-		0, 0, 0, 1);
-	rotation = glm::transpose(rotation);
 
-	glm::mat4 translation = glm::mat4(
-		1, 0, 0, -eye.x,
-		0, 1, 0, -eye.y,
-		0, 0, 1, -eye.z,
-		0, 0, 0, 1);
-	translation = glm::transpose(translation);
-
-	glm::mat4 transformation = rotation * translation;
-
-	return transformation;
+	return mCam;
 }

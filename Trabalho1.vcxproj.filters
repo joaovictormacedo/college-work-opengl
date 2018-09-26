@@ -49,9 +49,24 @@
     <None Include="..\..\Exemplo6\Exemplo6\shader.fra">
       <Filter>Arquivos de Origem</Filter>
     </None>
+    <None Include="shader_lamp.ver">
+      <Filter>Arquivos de Origem</Filter>
+    </None>
+    <None Include="shader_lamp.fra">
+      <Filter>Arquivos de Origem</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Object Include="..\..\Exemplo6\Exemplo6\teapot.obj">
+      <Filter>Arquivos de Origem</Filter>
+    </Object>
+    <Object Include="elephant.obj">
+      <Filter>Arquivos de Origem</Filter>
+    </Object>
+    <Object Include="TreeSet3.obj">
+      <Filter>Arquivos de Origem</Filter>
+    </Object>
+    <Object Include="monkeyspider.obj">
       <Filter>Arquivos de Origem</Filter>
     </Object>
   </ItemGroup>
