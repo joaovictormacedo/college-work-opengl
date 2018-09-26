@@ -69,5 +69,8 @@
     <Object Include="monkeyspider.obj">
       <Filter>Arquivos de Origem</Filter>
     </Object>
+    <Object Include="mountain.obj">
+      <Filter>Arquivos de Origem</Filter>
+    </Object>
   </ItemGroup>
 </Project>

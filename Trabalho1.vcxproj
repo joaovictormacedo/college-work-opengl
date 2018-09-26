@@ -124,7 +124,9 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Documents\OpenGL Stuff\srcGlad\glad.c" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="objeto.cpp" />
+    <ClCompile Include="objeto.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="shaders.cpp" />
     <ClCompile Include="transfomacoes.cpp" />
   </ItemGroup>
@@ -147,6 +149,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </Object>
     <Object Include="monkeyspider.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </Object>
+    <Object Include="mountain.obj">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </Object>
     <Object Include="TreeSet3.obj">

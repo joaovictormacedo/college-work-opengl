@@ -1,7 +1,5 @@
 #include "objeto.h"
 
-
-
 // Funcao para parsear o arquivo OBJ
 // Peguei da internet, possiveis adaptacoes podem ser necessarias
 void parse(const char * filepath, std::vector <glm::vec3> &vertices,
